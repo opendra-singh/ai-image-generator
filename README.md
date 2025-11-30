@@ -28,7 +28,7 @@ Before running the project, ensure you have the following installed:
 
 1.  **Navigate to the project directory**:
     ```bash
-    cd /Users/op/projects/yt-ai-image-generator
+    cd /projects/yt-ai-image-generator
     ```
 
 2.  **Install dependencies**:
