@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI Image Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <div class="container">
+    <!-- Sidebar Controls -->
+    <div class="controls">
+      <div class="header">
+        <h1>AI Studio</h1>
+        <p>Create stunning visuals with the power of AI.</p>
+      </div>
+
+      <div class="form-group">
+        <label for="select_model">Model</label>
+        <select id="select_model">
+          <option value="stable_diffudion_2">Stable Diffusion 2</option>
+          <option value="SDXL" selected>SDXL (High Quality)</option>
+          <option value="dall-e-3">DALL·E 3</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="image_type">Type</label>
+        <select id="image_type">
+          <option value="realistic">Realistic</option>
+          <option value="3d-render">3D Render</option>
+          <option value="illustration">Illustration</option>
+          <option value="anime">Anime</option>
+          <option value="concept-art">Concept Art</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="image_category">Category</label>
+        <select id="image_category">
+          <option value="clothing">Clothing</option>
+          <option value="landscape">Landscape</option>
+          <option value="interior">Interior</option>
+          <option value="portrait">Portrait</option>
+          <option value="product">Product</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="select_mode">Style</label>
+        <select id="select_mode">
+          <option value="cinematic">Cinematic</option>
+          <option value="minimalist">Minimalist</option>
+          <option value="vibrant">Vibrant</option>
+          <option value="dark">Dark</option>
+          <option value="fantasy">Fantasy</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label for="image_size">Size</label>
+        <select id="image_size">
+          <option value="1024x1024">Square (1024x1024)</option>
+          <option value="1024x1792">Portrait (1024x1792)</option>
+          <option value="1792x1024">Landscape (1792x1024)</option>
+        </select>
+      </div>
+
+      <button id="generate_button" onclick="generate_image()">
+        Generate Masterpiece
+      </button>
+    </div>
+
+    <!-- Image Preview Area -->
+    <div class="preview-area" id="preview_area">
+      <div class="placeholder" id="placeholder">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <p>Your imagination awaits.<br>Select options and click Generate.</p>
+      </div>
+
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Dreaming up your image...</p>
+      </div>
+
+      <div id="generated_image"></div>
+    </div>
+  </div>
+
+  <script>
+    async function generate_image() {
+      const button = document.getElementById('generate_button');
+      const placeholder = document.getElementById('placeholder');
+      const loading = document.getElementById('loading');
+      const resultContainer = document.getElementById('generated_image');
+      const previewArea = document.getElementById('preview_area');
+
+      // Get values
+      const imageType = document.getElementById('image_type').value;
+      const image_category = document.getElementById('image_category').value;
+      const selected_mode = document.getElementById('select_mode').value;
+      const selected_model = document.getElementById('select_model').value;
+      const imageSize = document.getElementById('image_size').value;
+
+      // UI State: Loading
+      button.disabled = true;
+      button.innerText = 'Generating...';
+      placeholder.style.display = 'none';
+      resultContainer.innerHTML = '';
+      loading.style.display = 'flex';
+      previewArea.classList.remove('has-image');
+
+      const data = {
+        imageType,
+        image_category,
+        selected_mode,
+        selected_model,
+        imageSize,
+      };
+
+      try {
+        const response = await fetch('http://localhost:8000/generate_image', {
+          method: "POST",
+          headers: {
+            'Content-type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const finalRes = await response.json();
+
+        if (finalRes.success === 'success') {
+          // UI State: Success
+          loading.style.display = 'none';
+          previewArea.classList.add('has-image');
+
+          const img = new Image();
+          img.src = finalRes.data;
+          img.alt = "Generated AI Image";
+          img.onload = () => {
+            resultContainer.appendChild(img);
+          };
+        } else {
+          throw new Error('API returned error');
+        }
+
+      } catch (error) {
+        console.error('Error:', error);
+        loading.style.display = 'none';
+        placeholder.style.display = 'block';
+        placeholder.innerHTML = '<p style="color: #ef4444">Something went wrong. Please try again.</p>';
+      } finally {
+        button.disabled = false;
+        button.innerText = 'Generate Masterpiece';
+      }
+    }
+  </script>
+</body>
+
+</html>
